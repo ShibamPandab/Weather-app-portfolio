@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nimbus — Weather</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Background canvas for animated particles -->
+  <canvas id="bgCanvas"></canvas>
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="logo">
+      <span class="logo-icon">◎</span>
+      <span class="logo-text">Nimbus</span>
+    </div>
+    <div class="unit-toggle">
+      <button class="unit-btn active" id="btnC" onclick="setUnit('C')">°C</button>
+      <span class="unit-sep">·</span>
+      <button class="unit-btn" id="btnF" onclick="setUnit('F')">°F</button>
+    </div>
+  </header>
+
+  <!-- Search -->
+  <div class="search-wrap">
+    <div class="search-box" id="searchBox">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Search city…"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button class="search-btn" onclick="handleSearch()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="5" y1="12" x2="19" y2="12"/>
+          <polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  <div class="loader-wrap" id="loader">
+    <div class="loader-ring">
+      <div></div><div></div><div></div><div></div>
+    </div>
+    <p class="loader-text">Fetching weather…</p>
+  </div>
+
+  <!-- Error state -->
+  <div class="error-wrap" id="errorWrap">
+    <div class="error-icon">⚠</div>
+    <p class="error-msg" id="errorMsg">City not found. Please try again.</p>
+    <button class="retry-btn" onclick="clearError()">Try Again</button>
+  </div>
+
+  <!-- Main content -->
+  <main class="main-content" id="mainContent">
+
+    <!-- Hero: current weather -->
+    <section class="hero-card glass" id="heroCard">
+      <div class="hero-left">
+        <div class="city-name" id="cityName">—</div>
+        <div class="country-date">
+          <span id="countryName">—</span>
+          <span class="dot-sep">·</span>
+          <span id="currentDate">—</span>
+        </div>
+        <div class="condition-row">
+          <img class="condition-icon" id="conditionIcon" src="" alt="weather icon"/>
+          <span class="condition-text" id="conditionText">—</span>
+        </div>
+        <div class="meta-grid">
+          <div class="meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+            <div>
+              <span class="meta-label">Feels Like</span>
+              <span class="meta-val" id="feelsLike">—</span>
+            </div>
+          </div>
+          <div class="meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v6m0 0c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4z"/><path d="M12 22v-6"/></svg>
+            <div>
+              <span class="meta-label">Humidity</span>
+              <span class="meta-val" id="humidity">—</span>
+            </div>
+          </div>
+          <div class="meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>
+            <div>
+              <span class="meta-label">Wind</span>
+              <span class="meta-val" id="windSpeed">—</span>
+            </div>
+          </div>
+          <div class="meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            <div>
+              <span class="meta-label">Visibility</span>
+              <span class="meta-val" id="visibility">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-right">
+        <div class="temp-display">
+          <span class="temp-val" id="tempVal">—</span>
+          <span class="temp-unit" id="tempUnit">°C</span>
+        </div>
+        <div class="temp-range">
+          <span class="temp-hi" id="tempHi">↑ —</span>
+          <span class="temp-lo" id="tempLo">↓ —</span>
+        </div>
+        <div class="sun-row">
+          <div class="sun-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <div>
+              <span class="sun-label">Sunrise</span>
+              <span class="sun-val" id="sunrise">—</span>
+            </div>
+          </div>
+          <div class="sun-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="2" x2="12" y2="9"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/></svg>
+            <div>
+              <span class="sun-label">Sunset</span>
+              <span class="sun-val" id="sunset">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Hourly forecast -->
+    <section class="section-block">
+      <h2 class="section-title">Hourly Forecast</h2>
+      <div class="hourly-scroll">
+        <div class="hourly-track" id="hourlyTrack">
+          <!-- populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 5-day forecast -->
+    <section class="section-block">
+      <h2 class="section-title">5-Day Forecast</h2>
+      <div class="forecast-grid" id="forecastGrid">
+        <!-- populated by JS -->
+      </div>
+    </section>
+
+    <!-- UV + Pressure + Cloudiness -->
+    <section class="extra-grid">
+      <div class="extra-card glass">
+        <div class="extra-label">Pressure</div>
+        <div class="extra-val" id="pressure">—</div>
+        <div class="extra-unit">hPa</div>
+        <div class="gauge-wrap">
+          <div class="gauge-bar"><div class="gauge-fill" id="pressureBar"></div></div>
+        </div>
+      </div>
+      <div class="extra-card glass">
+        <div class="extra-label">Cloud Cover</div>
+        <div class="extra-val" id="cloudiness">—</div>
+        <div class="extra-unit">%</div>
+        <div class="gauge-wrap">
+          <div class="gauge-bar"><div class="gauge-fill" id="cloudinessBar"></div></div>
+        </div>
+      </div>
+      <div class="extra-card glass">
+        <div class="extra-label">Wind Direction</div>
+        <div class="extra-val" id="windDir">—</div>
+        <div class="extra-unit">degrees</div>
+        <div class="compass-wrap">
+          <div class="compass-ring">
+            <span class="compass-n">N</span>
+            <span class="compass-s">S</span>
+            <span class="compass-e">E</span>
+            <span class="compass-w">W</span>
+            <div class="compass-needle" id="compassNeedle"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    Powered by <a href="https://openweathermap.org" target="_blank">OpenWeatherMap</a> · Built with ◎ Nimbus
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
