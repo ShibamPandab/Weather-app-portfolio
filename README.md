@@ -8,12 +8,12 @@ It fetches real-time weather data using a weather API and displays it with a cle
 ---
 
 ## 🚀 Live Demo
-👉 https://your-live-link.netlify.app
+👉 https://mynimbusweatherapp.netlify.app
 
 ---
 
 ## 📸 Preview
-(Add screenshot here)
+
 
 ---
 
